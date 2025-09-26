@@ -47,7 +47,7 @@ def human_move(board):
         except ValueError:
             print("Enter valid integers in the format row,col (e.g., 0,1).")
 
-# --- Simplified Minimax for depth=2 ---
+# --- Optimized Minimax with Alpha-Beta Pruning ---
 def evaluate(board):
     if check_win(board,'O'):
         return 10
@@ -56,6 +56,83 @@ def evaluate(board):
     else:
         return 0
 
+def get_candidate_moves(board, radius=1):
+    """Get moves near existing pieces to reduce search space"""
+    size = len(board)
+    candidates = set()
+    
+    # Find all occupied cells
+    occupied = []
+    for r in range(size):
+        for c in range(size):
+            if board[r][c] != '.':
+                occupied.append((r, c))
+    
+    # If board is empty, return center area
+    if not occupied:
+        center = size // 2
+        for r in range(max(0, center-1), min(size, center+2)):
+            for c in range(max(0, center-1), min(size, center+2)):
+                if board[r][c] == '.':
+                    candidates.add((r, c))
+        return list(candidates)
+    
+    # Add cells within radius of occupied cells
+    for r, c in occupied:
+        for dr in range(-radius, radius+1):
+            for dc in range(-radius, radius+1):
+                nr, nc = r + dr, c + dc
+                if (0 <= nr < size and 0 <= nc < size and 
+                    board[nr][nc] == '.'):
+                    candidates.add((nr, nc))
+    
+    # If no candidates found (shouldn't happen), fallback to all empty
+    if not candidates:
+        for r in range(size):
+            for c in range(size):
+                if board[r][c] == '.':
+                    candidates.add((r, c))
+    
+    return list(candidates)
+
+def minimax_alpha_beta(board, depth, is_maximizing, alpha=-float('inf'), beta=float('inf')):
+    """Minimax with alpha-beta pruning for better performance"""
+    score = evaluate(board)
+    if score == 10 or score == -10 or is_full(board) or depth == 0:
+        return score
+
+    if is_maximizing:
+        best = -float('inf')
+        candidates = get_candidate_moves(board)
+        
+        for r, c in candidates:
+            board[r][c] = 'O'
+            best = max(best, minimax_alpha_beta(board, depth-1, False, alpha, beta))
+            board[r][c] = '.'
+            
+            # Alpha-beta pruning
+            alpha = max(alpha, best)
+            if beta <= alpha:
+                break  # Beta cutoff
+                
+        return best
+    else:
+        best = float('inf')
+        candidates = get_candidate_moves(board)
+        
+        for r, c in candidates:
+            board[r][c] = 'X'
+            best = min(best, minimax_alpha_beta(board, depth-1, True, alpha, beta))
+            board[r][c] = '.'
+            
+            # Alpha-beta pruning
+            beta = min(beta, best)
+            if beta <= alpha:
+                break  # Alpha cutoff
+                
+        return best
+
+# Keep original minimax for backward compatibility
 def minimax(board, depth, is_maximizing):
     score = evaluate(board)
     if score==10 or score==-10 or is_full(board) or depth==0:
@@ -82,6 +159,39 @@ def minimax(board, depth, is_maximizing):
         return best
 
 def ai_move(board):
+    """Optimized AI move using alpha-beta pruning and candidate moves"""
+    best_val = -float('inf')
+    best_move = None
+    
+    # Get candidate moves (near existing pieces)
+    candidates = get_candidate_moves(board)
+    
+    # If no candidates, fallback to all empty cells
+    if not candidates:
+        size = len(board)
+        candidates = [(r, c) for r in range(size) for c in range(size) if board[r][c] == '.']
+    
+    # Evaluate each candidate move
+    for r, c in candidates:
+        board[r][c] = 'O'
+        move_val = minimax_alpha_beta(board, depth=2, is_maximizing=False)
+        board[r][c] = '.'
+        
+        if move_val > best_val:
+            best_val = move_val
+            best_move = (r, c)
+    
+    # Make the best move
+    if best_move:
+        board[best_move[0]][best_move[1]] = 'O'
+    else:
+        # Fallback: random move from candidates
+        if candidates:
+            r, c = random.choice(candidates)
+            board[r][c] = 'O'
+
+def ai_move_original(board):
+    """Original AI move function (kept for comparison)"""
     size=len(board)
     best_val = -1000
     best_move = None
