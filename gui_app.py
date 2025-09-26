@@ -28,38 +28,45 @@ class GameGUI:
         title_label.pack(pady=30)
         
         # Subtitle
-        subtitle_label = ttk.Label(self.root, text="Play against the AI (minimax)", style='Info.TLabel')
+        subtitle_label = ttk.Label(self.root, text="Choose your game mode", style='Info.TLabel')
         subtitle_label.pack(pady=10)
         
         # Game buttons frame
         buttons_frame = tk.Frame(self.root, bg='#2c3e50')
         buttons_frame.pack(expand=True, fill='both', padx=50, pady=30)
 
-        # Tic Tac Toe Button
-        ttt_btn = ttk.Button(buttons_frame, text="Play Tic Tac Toe", 
-                            command=self.open_tic_tac_toe, style='Game.TButton')
-        ttt_btn.pack(fill='x', pady=10)
+        # AI vs Player Button
+        ai_btn = ttk.Button(buttons_frame, text="🤖 Play vs AI\nChallenge the minimax AI", 
+                           command=lambda: self.open_tic_tac_toe('ai'), style='Game.TButton')
+        ai_btn.pack(fill='x', pady=10)
+        
+        # Player vs Player Button
+        pvp_btn = ttk.Button(buttons_frame, text="👥 Player vs Player\nTwo players on one computer", 
+                            command=lambda: self.open_tic_tac_toe('pvp'), style='Game.TButton')
+        pvp_btn.pack(fill='x', pady=10)
         
         # Exit button
         exit_btn = ttk.Button(buttons_frame, text="🚪 Exit", command=self.root.quit, style='Game.TButton')
         exit_btn.pack(fill='x', pady=20)
     
-    def open_tic_tac_toe(self):
-        self.ttt_window = TicTacToeWindow(self.root, l4)
+    def open_tic_tac_toe(self, mode='ai'):
+        self.ttt_window = TicTacToeWindow(self.root, l4, mode)
 
 class TicTacToeWindow:
-    def __init__(self, parent, game_module):
+    def __init__(self, parent, game_module, mode='ai'):
         self.parent = parent
         self.game_module = game_module
+        self.mode = mode  # 'ai' or 'pvp'
         
         # Create new window
+        mode_title = "AI Challenge" if mode == 'ai' else "Player vs Player"
         self.window = tk.Toplevel(parent)
-        self.window.title("Tic Tac Toe - AI Challenge")
+        self.window.title(f"Tic Tac Toe - {mode_title}")
         self.window.geometry("600x700")
         self.window.configure(bg='#34495e')
         
         # Title
-        title_label = ttk.Label(self.window, text="❌⭕ Tic Tac Toe - AI Challenge", 
+        title_label = ttk.Label(self.window, text=f"❌⭕ Tic Tac Toe - {mode_title}", 
                                font=('Arial', 18, 'bold'), background='#34495e', foreground='white')
         title_label.pack(pady=20)
         
@@ -82,7 +89,8 @@ class TicTacToeWindow:
         close_btn.pack(side='left', padx=10)
         
         # Status label
-        self.status_label = ttk.Label(self.window, text="Your turn! Click a cell to make your move", 
+        initial_text = "Your turn! Click a cell to make your move" if mode == 'ai' else "Player 1's turn (X)"
+        self.status_label = ttk.Label(self.window, text=initial_text, 
                                      font=('Arial', 12), background='#34495e', foreground='#f39c12')
         self.status_label.pack(pady=10)
         
@@ -95,6 +103,7 @@ class TicTacToeWindow:
         self.board = None
         self.win_length = 4
         self.game_over = False
+        self.current_player = 'X'  # For PvP mode
         
         self.new_game()
     
@@ -103,6 +112,7 @@ class TicTacToeWindow:
         self.win_length = min(4, self.size)
         self.board = self.game_module.create_board(self.size)
         self.game_over = False
+        self.current_player = 'X'  # Reset to Player 1
         
         # Clear and recreate board
         for widget in self.board_frame.winfo_children():
@@ -120,12 +130,23 @@ class TicTacToeWindow:
                 row.append(btn)
             self.buttons.append(row)
         
-        self.status_label.config(text="Your turn! Click a cell to make your move", foreground='#f39c12')
+        # Set initial status based on mode
+        if self.mode == 'ai':
+            self.status_label.config(text="Your turn! Click a cell to make your move", foreground='#f39c12')
+        else:
+            self.status_label.config(text="Player 1's turn (X)", foreground='#e74c3c')
     
     def make_move(self, row, col):
         if self.game_over or self.board[row][col] != '.':
             return
         
+        if self.mode == 'ai':
+            self.make_ai_move(row, col)
+        else:
+            self.make_pvp_move(row, col)
+    
+    def make_ai_move(self, row, col):
+        """Handle move in AI mode"""
         # Human move
         self.board[row][col] = 'X'
         self.buttons[row][col].config(text='X', fg='#e74c3c', state='disabled')
@@ -172,6 +193,41 @@ class TicTacToeWindow:
             return
         
         self.status_label.config(text="Your turn! Click a cell to make your move", foreground='#f39c12')
+    
+    def make_pvp_move(self, row, col):
+        """Handle move in Player vs Player mode"""
+        # Make the move for current player
+        self.board[row][col] = self.current_player
+        
+        # Update button appearance
+        if self.current_player == 'X':
+            self.buttons[row][col].config(text='X', fg='#e74c3c', state='disabled')
+        else:
+            self.buttons[row][col].config(text='O', fg='#3498db', state='disabled')
+        
+        # Check for win
+        if self.game_module.check_win(self.board, self.current_player, self.win_length):
+            player_name = "Player 1" if self.current_player == 'X' else "Player 2"
+            self.status_label.config(text=f"🎉 {player_name} Wins! Congratulations!", foreground='#27ae60')
+            self.game_over = True
+            self.disable_all_buttons()
+            return
+        
+        # Check for draw
+        if self.game_module.is_full(self.board):
+            self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
+            self.game_over = True
+            self.disable_all_buttons()
+            return
+        
+        # Switch players
+        self.current_player = 'O' if self.current_player == 'X' else 'X'
+        
+        # Update status
+        if self.current_player == 'X':
+            self.status_label.config(text="Player 1's turn (X)", foreground='#e74c3c')
+        else:
+            self.status_label.config(text="Player 2's turn (O)", foreground='#3498db')
     
     def disable_all_buttons(self):
         for i in range(self.size):

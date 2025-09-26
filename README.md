@@ -5,10 +5,13 @@ A Python project featuring a Tic-Tac-Toe game with both console and GUI interfac
 ## Features
 
 ### ❌⭕ Tic-Tac-Toe
+- **Two Game Modes**:
+  - 🤖 **AI Challenge**: Play against a minimax AI opponent
+  - 👥 **Player vs Player**: Two players on one computer
 - Variable board size (4x4 to 10x10)
-- AI opponent using minimax algorithm
 - Interactive click-to-play interface
 - Win detection for 4-in-a-row (or smaller for smaller boards)
+- Clear turn indicators and game status
 
 ## Requirements
 - Python 3.8+
