@@ -1,11 +1,23 @@
-# Python Project
+# Tic Tac Toe (with GUI and AI)
 
-A small Python project containing a main entry script and supporting modules. Use this README to set up the environment and run the app locally.
+A Python project featuring a Tic-Tac-Toe game with both console and GUI interfaces. The GUI offers a clean, modern interface, and the AI opponent uses a minimax-based strategy.
+
+## Features
+
+### ❌⭕ Tic-Tac-Toe
+- Variable board size (4x4 to 10x10)
+- AI opponent using minimax algorithm
+- Interactive click-to-play interface
+- Win detection for 4-in-a-row (or smaller for smaller boards)
 
 ## Requirements
 - Python 3.8+
+- tkinter (included with Python)
+  
 
 ## Getting Started
+
+### GUI Mode (Recommended)
 1. (Optional) Create and activate a virtual environment
    - Windows (PowerShell):
      ```bash
@@ -13,23 +25,29 @@ A small Python project containing a main entry script and supporting modules. Us
      .venv\\Scripts\\Activate.ps1
      ```
 2. Install dependencies
-   - This project currently has no external dependencies. If you add any, create a `requirements.txt` and install with:
-     ```bash
-     pip install -r requirements.txt
-     ```
-3. Run the program
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run the GUI application
    ```bash
    python main.py
    ```
 
+### Console Mode
+If you prefer the original console interface:
+```bash
+python main.py --console
+```
+
 ## Project Structure
 ```
 .
-├─ main.py        # Entry point
-├─ L2.py          # Module
-├─ L3.py          # Module
-├─ L4.py          # Module
-└─ __pycache__/   # Bytecode cache (generated)
+├─ main.py           # Entry point (launches GUI by default)
+├─ gui_app.py        # GUI application with modern interface
+├─ L4.py             # Tic-Tac-Toe with minimax AI
+├─ requirements.txt  # Python dependencies
+├─ README.md         # This file
+└─ __pycache__/      # Bytecode cache (generated)
 ```
 
 ## Configuration
