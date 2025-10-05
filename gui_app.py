@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-import L4 as l4
 import threading
 import queue
+from tictactoe.presenter.game_presenter import GamePresenter
 try:
     import winsound
 except Exception:
@@ -14,6 +14,9 @@ class GameGUI:
         self.root.title("Tic Tac Toe")
         self.root.geometry("800x700")
         self.root.configure(bg='#2c3e50')
+        
+        # Presenter
+        self.presenter = GamePresenter()
         
         # Configure style
         self.style = ttk.Style()
@@ -125,7 +128,7 @@ class GameGUI:
     def new_game(self):
         self.size = int(self.size_var.get())
         self.win_length = min(4, self.size)
-        self.board = l4.create_board(self.size)
+        self.board = self.presenter.create_board(self.size)
         self.game_over = False
         self.current_player = 'X'  # Reset to Player 1
         
@@ -173,14 +176,14 @@ class GameGUI:
             pass
         
         # Check for human win
-        if l4.check_win(self.board, 'X', self.win_length):
+        if self.presenter.check_win(self.board, 'X', self.win_length):
             self.status_label.config(text="🎉 You Win! Congratulations!", foreground='#27ae60')
             self.game_over = True
             self.disable_all_buttons()
             return
         
         # Check for draw
-        if l4.is_full(self.board):
+        if self.presenter.is_full(self.board):
             self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
             self.game_over = True
             self.disable_all_buttons()
@@ -192,7 +195,7 @@ class GameGUI:
         def ai_worker(board_snapshot, result_queue):
             # Run AI on a copy to avoid partial state exposure
             b_copy = [row[:] for row in board_snapshot]
-            l4.ai_move(b_copy)
+            self.presenter.ai_move(b_copy)
             # Put the resulting board into the queue for the main thread to apply
             result_queue.put(b_copy)
 
@@ -213,7 +216,7 @@ class GameGUI:
             self.buttons[row][col].config(text='O', fg='#3498db', state='disabled')
         
         # Check for win
-        if l4.check_win(self.board, self.current_player, self.win_length):
+        if self.presenter.check_win(self.board, self.current_player, self.win_length):
             player_name = "Player 1" if self.current_player == 'X' else "Player 2"
             self.status_label.config(text=f"🎉 {player_name} Wins! Congratulations!", foreground='#27ae60')
             self.game_over = True
@@ -221,7 +224,7 @@ class GameGUI:
             return
         
         # Check for draw
-        if l4.is_full(self.board):
+        if self.presenter.is_full(self.board):
             self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
             self.game_over = True
             self.disable_all_buttons()
@@ -331,7 +334,7 @@ class GameGUI:
                                 except Exception:
                                     pass
                 # Check for AI win
-                if l4.check_win(self.board, 'O', self.win_length):
+                if self.presenter.check_win(self.board, 'O', self.win_length):
                     self.status_label.config(text="🤖 AI Wins! Better luck next time!", foreground='#e74c3c')
                     self.game_over = True
                     self.disable_all_buttons()
@@ -343,7 +346,7 @@ class GameGUI:
                         self._play_sound('lose')
                     except Exception:
                         pass
-                elif l4.is_full(self.board):
+                elif self.presenter.is_full(self.board):
                     self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
                     self.game_over = True
                     self.disable_all_buttons()
