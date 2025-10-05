@@ -4,73 +4,81 @@ A Python project featuring a Tic-Tac-Toe game with both console and GUI interfac
 
 ## Features
 
-### ❌⭕ Tic-Tac-Toe
-- **Two Game Modes**:
-  - 🤖 **AI Challenge**: Play against a minimax AI opponent
-  - 👥 **Player vs Player**: Two players on one computer
-- Variable board size (4x4 to 10x10)
-- Interactive click-to-play interface
-- Win detection for 4-in-a-row (or smaller for smaller boards)
-- Clear turn indicators and game status
+
+# Tic Tac Toe (GUI + AI)
+
+This repository contains a Tic-Tac-Toe implementation with both a modern Tkinter GUI and a console mode. The AI opponent is a minimax-based agent enhanced with alpha-beta pruning, move ordering, iterative deepening, and simple tactical checks.
+
+## Highlights
+- Play vs AI (minimax-based) or Player vs Player locally.
+- Variable board sizes (4x4 up to 10x10).
+- Simple, clean GUI with board size control and status messages.
 
 ## Requirements
-- Python 3.8+
-- tkinter (included with Python)
-  
+- Python 3.8 or newer
+- tkinter (bundled with standard Python on most installs)
+- See `requirements.txt` for development and test tools (pytest, black, mypy, flake8).
 
-## Getting Started
+## Quick start (Windows PowerShell)
 
-### GUI Mode (Recommended)
-1. (Optional) Create and activate a virtual environment
-   - Windows (PowerShell):
-     ```bash
-     python -m venv .venv
-     .venv\\Scripts\\Activate.ps1
-     ```
-2. Install dependencies
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the GUI application
-   ```bash
-   python main.py
-   ```
+1. Create and activate a virtual environment (recommended):
 
-### Console Mode
-If you prefer the original console interface:
-```bash
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+```
+
+2. Install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+3. Run the GUI (recommended):
+
+```powershell
+python main.py
+```
+
+4. Or run the console mode:
+
+```powershell
 python main.py --console
 ```
 
-## Project Structure
+## Running tests
+
+If you add tests, place them under a `tests/` directory. To run tests locally:
+
+```powershell
+pip install pytest
+pytest -q
+```
+
+## Suggested next improvements
+- Add unit tests for `L4.py` (core game logic and AI tactics).
+- Make AI moves run in a background thread so the GUI stays responsive during thinking.
+- Highlight the winning line in the GUI and add undo/restart buttons.
+
+## Project layout
+
 ```
 .
 ├─ main.py           # Entry point (launches GUI by default)
-├─ gui_app.py        # GUI application with modern interface
-├─ L4.py             # Tic-Tac-Toe with minimax AI
-├─ requirements.txt  # Python dependencies
+├─ gui_app.py        # Tkinter GUI
+├─ L4.py             # Game logic and AI
+├─ L2.py, L3.py      # Supporting algorithms / examples
+├─ requirements.txt  # dev & test dependencies
 ├─ README.md         # This file
-└─ __pycache__/      # Bytecode cache (generated)
 ```
 
-## Configuration
-- No configuration is required by default. If your scripts rely on environment variables or config files, document them here.
+## Contributing
 
-## Testing
-- If you add tests, place them in a `tests/` directory and run with `pytest`:
-  ```bash
-  pip install pytest
-  pytest -q
-  ```
-
-## Notes
-- Keep functions well-documented with docstrings.
-- Prefer descriptive variable and function names.
-- Run `python -m pip install --upgrade pip` occasionally to keep pip up to date.
+- Open an issue for features or bugs.
+- Keep changes small and focused; add tests for new behavior when possible.
+- Follow formatting rules (`black`) and type-check with `mypy` as you improve code quality.
 
 ## License
-This project is for educational purposes only.
 
-```
-MIT License
-```
+This project is provided for educational purposes.
