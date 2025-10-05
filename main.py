@@ -1,5 +1,5 @@
-from tictactoe import l4
-from tictactoe.gui import main as gui_main
+import L4 as l4
+from gui_app import main as gui_main
 
 def console_menu():
     """Original console-based menu (kept for compatibility)"""

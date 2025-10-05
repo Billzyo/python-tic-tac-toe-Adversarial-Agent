@@ -7,7 +7,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from tictactoe import l4
+import L4 as l4
 
 
 def test_ai_makes_legal_move_under_time_limit():
