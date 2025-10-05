@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 import L4 as l4
+import threading
+import queue
 
 class GameGUI:
     def __init__(self, root):
@@ -25,7 +27,11 @@ class GameGUI:
         self.game_over = False
         self.current_player = 'X'
         self.buttons = []
-        
+        # Queue used to schedule UI updates from worker threads
+        self._ui_queue = queue.Queue()
+        # Start a periodic UI queue processor
+        self.root.after(100, self._process_ui_queue)
+
         self.setup_main_menu()
     
     def setup_main_menu(self):
@@ -166,34 +172,20 @@ class GameGUI:
             self.disable_all_buttons()
             return
         
-        # AI move
+        # AI move (non-blocking): run AI in a background thread and schedule UI update
         self.status_label.config(text="🤖 AI is thinking...", foreground='#3498db')
-        self.root.update()
-        
-        l4.ai_move(self.board)
-        
-        # Find AI's move and update button
-        for i in range(self.size):
-            for j in range(self.size):
-                if self.board[i][j] == 'O' and self.buttons[i][j]['text'] == '':
-                    self.buttons[i][j].config(text='O', fg='#3498db', state='disabled')
-                    break
-        
-        # Check for AI win
-        if l4.check_win(self.board, 'O', self.win_length):
-            self.status_label.config(text="🤖 AI Wins! Better luck next time!", foreground='#e74c3c')
-            self.game_over = True
-            self.disable_all_buttons()
-            return
-        
-        # Check for draw
-        if l4.is_full(self.board):
-            self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
-            self.game_over = True
-            self.disable_all_buttons()
-            return
-        
-        self.status_label.config(text="Your turn! Click a cell to make your move", foreground='#f39c12')
+
+        def ai_worker(board_snapshot, result_queue):
+            # Run AI on a copy to avoid partial state exposure
+            b_copy = [row[:] for row in board_snapshot]
+            l4.ai_move(b_copy)
+            # Put the resulting board into the queue for the main thread to apply
+            result_queue.put(b_copy)
+
+        threading.Thread(target=ai_worker, args=(self.board, self._ui_queue), daemon=True).start()
+
+        # UI will be updated by _process_ui_queue when the worker finishes
+        return
     
     def make_pvp_move(self, row, col):
         """Handle move in Player vs Player mode"""
@@ -234,6 +226,35 @@ class GameGUI:
         for i in range(self.size):
             for j in range(self.size):
                 self.buttons[i][j].config(state='disabled')
+
+    def _process_ui_queue(self):
+        """Process UI update tasks from worker threads."""
+        try:
+            while True:
+                b_copy = self._ui_queue.get_nowait()
+                # Apply differences from b_copy to self.board and buttons
+                for i in range(self.size):
+                    for j in range(self.size):
+                        if self.board[i][j] != b_copy[i][j]:
+                            self.board[i][j] = b_copy[i][j]
+                            if b_copy[i][j] == 'O':
+                                self.buttons[i][j].config(text='O', fg='#3498db', state='disabled')
+                # Check for AI win
+                if l4.check_win(self.board, 'O', self.win_length):
+                    self.status_label.config(text="🤖 AI Wins! Better luck next time!", foreground='#e74c3c')
+                    self.game_over = True
+                    self.disable_all_buttons()
+                elif l4.is_full(self.board):
+                    self.status_label.config(text="🤝 It's a Draw!", foreground='#f39c12')
+                    self.game_over = True
+                    self.disable_all_buttons()
+                else:
+                    self.status_label.config(text="Your turn! Click a cell to make your move", foreground='#f39c12')
+        except queue.Empty:
+            pass
+        finally:
+            # Schedule next check
+            self.root.after(100, self._process_ui_queue)
 
 
 def main():
